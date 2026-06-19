@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  trading-engine:
+    build: .
+    container_name: aitrading-engine
+    restart: unless-stopped
+    command: python main.py
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./ml/models:/app/ml/models
+      - ./.env:/app/.env
+    environment:
+      - TZ=Asia/Jakarta
+
+  dashboard:
+    build: .
+    container_name: aitrading-dashboard
+    restart: unless-stopped
+    command: streamlit run dashboard/app.py --server.address=0.0.0.0 --server.port=8501
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./.env:/app/.env
+    environment:
+      - TZ=Asia/Jakarta
+    depends_on:
+      - trading-engine

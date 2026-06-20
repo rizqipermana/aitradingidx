@@ -14,7 +14,9 @@ import os
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 
+import time
 import pandas as pd
+import requests
 import yfinance as yf
 
 from utils.logger import get_logger
@@ -87,7 +89,14 @@ class MarketDataFetcher:
             start_date = end_date - timedelta(days=days)
 
             logger.info(f"[{ticker}] Fetching data from Yahoo Finance...")
-            stock = yf.Ticker(ticker)
+            
+            # Use custom session to bypass basic blocks
+            session = requests.Session()
+            session.headers.update({
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            })
+            
+            stock = yf.Ticker(ticker, session=session)
             df = stock.history(
                 start=start_date.strftime("%Y-%m-%d"),
                 end=end_date.strftime("%Y-%m-%d"),
@@ -158,6 +167,9 @@ class MarketDataFetcher:
                 success_count += 1
             else:
                 fail_count += 1
+                
+            # Add sleep to prevent hitting rate limit
+            time.sleep(2)
 
         logger.info(
             f"Scan complete: {success_count} succeeded, {fail_count} failed "

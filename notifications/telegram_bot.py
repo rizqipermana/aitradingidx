@@ -32,13 +32,7 @@ class TelegramBot:
         self.chat_id = settings.TELEGRAM_CHAT_ID
 
         if self.enabled and self.token and self.chat_id:
-            try:
-                # We initialize it but don't perform async operations yet
-                self.bot = Bot(token=self.token)
-                logger.info("Telegram Bot initialized")
-            except Exception as e:
-                logger.error(f"Failed to initialize Telegram Bot: {e}")
-                self.enabled = False
+            logger.info("Telegram Bot configuration loaded")
         else:
             if self.enabled:
                 logger.warning(
@@ -69,11 +63,12 @@ class TelegramBot:
 
     async def _send_message_async(self, text: str, parse_mode: str = "HTML") -> bool:
         """Send message asynchronously."""
-        if not self.enabled or not self.bot:
+        if not self.enabled:
             return False
 
         try:
-            await self.bot.send_message(
+            bot = Bot(token=self.token)
+            await bot.send_message(
                 chat_id=self.chat_id,
                 text=text,
                 parse_mode=parse_mode,
